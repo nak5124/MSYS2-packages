@@ -1,8 +1,9 @@
 # Maintainer: Alexey Pavlov <alexpux@gmail.com>
+# Contributor: Yuta Nakai <nak5124@live.jp>
 
 pkgname=tmux-git
 _ver_base=1.9
-pkgver=1.9.4851.f8481f9
+pkgver=1.9.4926.747cab4
 pkgrel=1
 pkgdesc='A terminal multiplexer'
 url='http://tmux.sourceforge.net/'
@@ -13,11 +14,19 @@ conflicts=('tmux')
 depends=('ncurses' 'libevent')
 makedepends=('git' 'ncurses-devel' 'libevent-devel')
 source=("$pkgname"::'git+http://git.code.sf.net/p/tmux/tmux-code'
-        LICENSE
-        'msys-platform.patch')
+        'LICENSE'
+        '0001-msys-platform.patch'
+        '0002-fix-declaration-of-MAXPATHLEN.patch'
+        '0003-use_acs.patch'
+        '0004-utf8_width.patch'
+        '0005-copy_cursor_width.patch')
 md5sums=('SKIP'
          '71601bc37fa44e4395580b321963018e'
-         'b175ece57d04168245f63dbf51f87cd0')
+         'b175ece57d04168245f63dbf51f87cd0'
+         '7b8ce74544c7e918f712e7114145d98e'
+         'b5a79f71f85c51b2973058a0be9a46ab'
+         '14fee957c94a892c80d2073b96ce8d82'
+         '56d1ab216a5395eb865f6fa7dd490459')
 
 pkgver() {
   cd ${srcdir}/${pkgname}
@@ -26,14 +35,22 @@ pkgver() {
 
 prepare() {
   cd ${srcdir}/${pkgname}
-  patch -p1 -i ${srcdir}/msys-platform.patch
-  cp osdep-cygwin.c osdep-msys.c
+  patch -p1 -i ${srcdir}/0001-msys-platform.patch
+  patch -p1 -i ${srcdir}/0002-fix-declaration-of-MAXPATHLEN.patch
+  patch -p1 -i ${srcdir}/0003-use_acs.patch
+  patch -p1 -i ${srcdir}/0004-utf8_width.patch
+  patch -p1 -i ${srcdir}/0005-copy_cursor_width.patch
+  cp -fa osdep-cygwin.c osdep-msys.c
   ./autogen.sh
 }
 
 build() {
   cd ${srcdir}/${pkgname}
-  ./configure --prefix=/usr CPPFLAGS="${CPPFLAGS} -I/usr/include/ncurses"
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    CPPFLAGS="${CPPFLAGS} -I/usr/include/ncursesw"
   make
 }
 
